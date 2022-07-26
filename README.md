@@ -1,6 +1,6 @@
 # Pipeline-Bot
 
-![pipeline-bot.png]
+[[pipeline-bot.png]]
 
 This is a novelty Screeps bot which creates a pipeline of CARRY parts to transfer energy where it's needed.
 
