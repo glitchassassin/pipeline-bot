@@ -1,5 +1,5 @@
 import { Pipeline } from "pipeline/pipeline";
-import { ErrorMapper } from "utils/ErrorMapper";
+import 'ts-polyfill/lib/es2019-array';
 
 export const loop = () => {
   // Automatically delete memory of missing creeps
@@ -18,4 +18,5 @@ export const loop = () => {
       p.visualize();
     });
   }
+  console.log('Runtime', Game.cpu.getUsed(), Game.cpu.bucket)
 };

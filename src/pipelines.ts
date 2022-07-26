@@ -34,6 +34,7 @@ export function getPipeline(room: string, sourceId: Id<Source>) {
 
     Memory.rooms ??= {}
     Memory.rooms[room] ??= {pipelines: {}};
+    Memory.rooms[room].pipelines ??= {};
 
     if (!Memory.rooms[room].pipelines[sourceId]) {
         const path = PathFinder.search(spawn.pos, { pos: source.pos, range: 1 }, { roomCallback: pipelineCostMatrix, swampCost: 1 });
