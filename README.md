@@ -1,6 +1,6 @@
 # Pipeline-Bot
 
-[[https://github.com/glitchassassin/pipeline-bot/blob/master/pipeline-bot.png|pipeline bot]]
+![pipeline bot](https://github.com/glitchassassin/pipeline-bot/blob/master/pipeline-bot.png)
 
 This is a novelty Screeps bot which creates a pipeline of CARRY parts to transfer energy where it's needed.
 
