@@ -1,9 +1,7 @@
 import { Pipeline } from "pipeline/pipeline";
-import { getPipeline } from "pipelines";
-import { spawnManager } from "spawnManager";
 import { ErrorMapper } from "utils/ErrorMapper";
 
-export const loop = ErrorMapper.wrapLoop(() => {
+export const loop = () => {
   // Automatically delete memory of missing creeps
   for (const name in Memory.creeps) {
     if (!(name in Game.creeps)) {
@@ -13,10 +11,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   for (const room in Game.rooms) {
     const pipelines = Pipeline.byRoom(room);
-    spawnManager(room, pipelines);
-    pipelines.forEach(p => {
+    let spawned = false;
+    pipelines.filter(p => p.valid).forEach(p => {
+      if (!spawned) spawned ||= p.runSpawn();
       p.run();
       p.visualize();
     });
   }
-});
+};

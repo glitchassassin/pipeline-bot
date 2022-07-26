@@ -25,20 +25,21 @@ export function role(creep: Creep) {
     // }
 }
 
-export function spawn(room: string, pipeline: Pipeline) {
-    const spawn = Game.rooms[room]?.find(FIND_MY_SPAWNS).find(s => !s.spawning);
-    if (!spawn) return false;
-
-    const result = spawn.spawnCreep(
+export function spawn(pipeline: Pipeline) {
+    const name = Roles.PIPE + '-' + pipeline.source.id + '-' + Game.time;
+    const result = pipeline.spawn.spawnCreep(
         [CARRY],
-        Roles.PIPE + '-' + Game.time,
+        name,
         {
             memory: { role: Roles.PIPE, pipeline: pipeline.source.id },
-            directions: [spawn.pos.getDirectionTo(pipeline.path[0])] // only spawn on path
+            directions: [pipeline.spawn.pos.getDirectionTo(pipeline.path[0])] // only spawn on path
         }
     );
 
-    if (result === OK) return true;
+    if (result === OK) {
+        pipeline._pipes.push(name);
+        return true;
+    }
     if (result === ERR_NOT_ENOUGH_ENERGY || result === ERR_BUSY) return false;
     throw new Error('Bad spawn of PIPE: ' + result);
 }

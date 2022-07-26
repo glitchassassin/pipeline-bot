@@ -1,25 +1,26 @@
-import { adjacentWalkablePositions, byId } from "selectors";
+import { Pipeline } from "pipeline/pipeline";
+import { byId } from "selectors";
 import { Roles } from "./_roles";
 
 declare global {
     interface CreepMemory {
-        source?: Id<Source>
-        pullTarget?: RoomPosition
+        pipeline?: Id<Source>
     }
 }
 
 export function role(creep: Creep) {
-    const source = byId(creep.memory.source);
+    const source = byId(creep.memory.pipeline);
     if (source && creep.pos.inRangeTo(source.pos, 1)) creep.harvest(source);
 }
 
-export function spawn(room: string, source: Id<Source>) {
-    const spawn = Game.rooms[room]?.find(FIND_MY_SPAWNS).find(s => !s.spawning);
-    if (!spawn) return false;
+export function spawn(pipeline: Pipeline) {
+    const name = Roles.HARVESTER + '-' + Game.time;
+    const result = pipeline.spawn.spawnCreep([WORK, WORK, CARRY], name, { memory: { role: Roles.HARVESTER, pipeline: pipeline.source.id }});
 
-    const result = spawn.spawnCreep([WORK, WORK, CARRY], Roles.HARVESTER + '-' + Game.time, { memory: { role: Roles.HARVESTER, source }});
-
-    if (result === OK) return true;
+    if (result === OK) {
+        pipeline._harvesters.push(name);
+        return true;
+    }
     if (result === ERR_NOT_ENOUGH_ENERGY || result === ERR_BUSY) return false;
     throw new Error('Bad spawn of PICKER: ' + result);
 }
