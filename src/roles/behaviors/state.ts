@@ -1,19 +1,16 @@
 export enum States {
-    MOVE_HARVESTER = 'MOVE_HARVESTER',
-    RUN_PIPELINE = 'RUN_PIPELINE',
-    IDLE = 'IDLE',
+  TOW = 'MOVE_HARVESTER',
+  RUN_PIPELINE = 'RUN_PIPELINE',
+  IDLE = 'IDLE'
 }
 
 declare global {
-    interface CreepMemory {
-        state?: States
-    }
+  interface CreepMemory {
+    state?: States;
+  }
 }
 
-export function runStates(
-  states: Record<States, (creep: Creep) => States>,
-  creep: Creep
-) {
+export function runStates(states: Record<States, (creep: Creep) => States>, creep: Creep) {
   const statesRun: States[] = [];
   creep.memory.state ??= Object.keys(states)[0] as States; // First state is default
   while (!statesRun.includes(creep.memory.state)) {

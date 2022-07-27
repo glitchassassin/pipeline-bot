@@ -1,4 +1,4 @@
-import { Pipeline } from "pipeline/pipeline";
+import { pipelinesByRoom } from 'pipeline';
 import 'ts-polyfill/lib/es2019-array';
 
 export const loop = () => {
@@ -10,13 +10,14 @@ export const loop = () => {
   }
 
   for (const room in Game.rooms) {
-    const pipelines = Pipeline.byRoom(room);
+    const pipelines = pipelinesByRoom(room);
     let spawned = false;
-    pipelines.filter(p => p.valid).forEach(p => {
+    pipelines.forEach(p => {
+      p.survey();
       if (!spawned) spawned ||= p.runSpawn();
       p.run();
       p.visualize();
     });
   }
-  console.log('Runtime', Game.cpu.getUsed(), Game.cpu.bucket)
+  // console.log('Runtime', Game.cpu.getUsed(), Game.cpu.bucket);
 };

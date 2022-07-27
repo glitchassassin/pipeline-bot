@@ -1,14 +1,13 @@
 {
     "[javascript]": {
-        "editor.formatOnSave": false
     },
     "[json]": {
         "editor.formatOnSave": true
     },
     "[typescript]": {
-        "editor.formatOnSave": false
     },
     "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
         "source.fixAll.eslint": true
     },
     "editor.formatOnSave": true,
@@ -24,5 +23,6 @@
         "typings/**": true
     },
     "typescript.tsdk": "./node_modules/typescript/lib",
-    "eslint.enable": true
+    "eslint.enable": true,
+    "prettier.singleQuote": true
 }
