@@ -21,7 +21,7 @@ export class Pipeline {
   ) {
     console.log('New pipeline between', spawn, endpoint);
     this._spawn = spawn.name;
-    this.path = getPipelinePath(spawn.pos, endpoint)!;
+    this.path = getPipelinePath(spawn.pos, endpoint, type)!;
     if (!this.path) throw new Error(`Unable to create path for pipeline between ${spawn.pos} and ${endpoint}`);
     if (type === 'OUTPUT') this.path.reverse();
     this._pipes = Game.rooms[this.room]
@@ -61,7 +61,9 @@ export class Pipeline {
   }
   // true if spawn is making a new pipe for our pipeline
   spawningPipe() {
-    return this.spawn.spawning && this.spawn.spawning.name.includes(this.id) && this.spawn.spawning.remainingTime <= 1;
+    return (
+      this.spawn.spawning && this.spawn.spawning.name.includes(this.id) && this.spawn.spawning.name.includes(Roles.PIPE)
+    );
   }
 
   pullSpots() {
@@ -74,7 +76,6 @@ export class Pipeline {
       if (!pipes[i]) return [];
 
       if (pipes[i]!.memory.role === Roles.PIPE && (!pipes[i + 1] || pipes[i + 1]?.memory.role === Roles.PULLER)) {
-        new RoomVisual().circle(pipes[i]!.pos, { radius: 0.5, stroke: 'green', fill: 'transparent' });
         return this.type === 'OUTPUT' ? [pipes.length - i - 2] : [i + 1];
       }
     }
@@ -149,7 +150,6 @@ export class Pipeline {
 
     // Pipe energy
     // Pipes send to spawn or to prior spawn links
-    new RoomVisual(this.room).circle(this.path[0], { radius: 1, stroke: 'magenta', fill: 'transparent' });
     if (this.type === 'INPUT') {
       this.pipes[0]?.transfer(this.spawn, RESOURCE_ENERGY);
     } else if (this.type === 'OUTPUT' && this.intact && this.spawn.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {

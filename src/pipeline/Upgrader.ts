@@ -67,7 +67,8 @@ export class Upgrader extends Pipeline {
     // upgrade
     this.upgraders.forEach((creep, i) => {
       // register tow, if needed
-      if (!creep.pos.isEqualTo(this.upgraderPositions[i])) {
+      console.log(creep.name, i, this.upgraderPositions);
+      if (!creep.pos.isEqualTo(this.upgraderPositions[i]) && !creep.spawning) {
         this.registerTow(creep, () => this.upgraderPositions[i]);
       }
 

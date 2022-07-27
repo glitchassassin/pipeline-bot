@@ -24,9 +24,10 @@ export function role(creep: Creep) {
 
 export function spawn(pipeline: Pipeline) {
   const name = Roles.PIPE + '-' + pipeline.id + '-' + Game.time;
+  const outputSquare = pipeline.type === 'INPUT' ? pipeline.path[0] : pipeline.path[pipeline.path.length - 1];
   const result = pipeline.spawn.spawnCreep([CARRY], name, {
     memory: { role: Roles.PIPE, pipeline: pipeline.id },
-    directions: [pipeline.spawn.pos.getDirectionTo(pipeline.path[0])] // only spawn on path
+    directions: [pipeline.spawn.pos.getDirectionTo(outputSquare)] // only spawn on path
   });
 
   if (result === OK) {

@@ -1,4 +1,5 @@
-import { pipelinesByRoom } from 'pipeline';
+import { PipelinesByRoom } from 'pipeline/byRoom';
+import { initializeRoom } from 'pipeline/initializeRoom';
 import 'ts-polyfill/lib/es2019-array';
 
 export const loop = () => {
@@ -10,7 +11,8 @@ export const loop = () => {
   }
 
   for (const room in Game.rooms) {
-    const pipelines = pipelinesByRoom(room);
+    initializeRoom(room);
+    const pipelines = PipelinesByRoom.get(room) ?? [];
     let spawned = false;
     pipelines.forEach(p => {
       p.survey();

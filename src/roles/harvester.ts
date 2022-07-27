@@ -1,6 +1,4 @@
 import { Harvester } from 'pipeline/Harvester';
-import { Pipeline } from 'pipeline/Pipeline';
-import { byId } from 'selectors';
 import { Roles } from './_roles';
 
 export function spawn(pipeline: Harvester) {
@@ -14,5 +12,5 @@ export function spawn(pipeline: Harvester) {
     return true;
   }
   if (result === ERR_NOT_ENOUGH_ENERGY || result === ERR_BUSY) return false;
-  throw new Error('Bad spawn of PICKER: ' + result);
+  throw new Error(`Bad spawn of ${Roles.HARVESTER}: ` + result);
 }

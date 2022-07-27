@@ -12,5 +12,5 @@ export function spawn(pipeline: Upgrader) {
     return true;
   }
   if (result === ERR_NOT_ENOUGH_ENERGY || result === ERR_BUSY) return false;
-  throw new Error('Bad spawn of PICKER: ' + result);
+  throw new Error(`Bad spawn of ${Roles.UPGRADER}: ` + result);
 }

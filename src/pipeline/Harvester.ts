@@ -66,7 +66,7 @@ export class Harvester extends Pipeline {
     // harvest
     this.harvesters.forEach((creep, i) => {
       // register tow, if needed
-      if (!creep.pos.isEqualTo(this.harvesterPositions[i])) {
+      if (!creep.pos.isEqualTo(this.harvesterPositions[i]) && !creep.spawning) {
         this.registerTow(creep, () => this.harvesterPositions[i]);
       }
 
