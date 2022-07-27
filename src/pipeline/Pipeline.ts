@@ -106,7 +106,9 @@ export class Pipeline {
   requestTowee(name?: string): [string, () => RoomPosition] | [] {
     if (name && this._tows[name]) return [name, this._tows[name]];
     for (const c in this._tows) {
-      if (!this.pullers.some(p => p.memory.pullTarget === c)) {
+      if (!Game.creeps[c]) {
+        delete this._tows[c];
+      } else if (!this.pullers.some(p => p.memory.pullTarget === c)) {
         return [c, this._tows[c]];
       }
     }
