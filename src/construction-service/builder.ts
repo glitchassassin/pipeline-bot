@@ -58,6 +58,6 @@ export function spawnBuilder(room: string) {
   );
   const name = `${Roles.BUILDER}-${room}-${Game.time}`;
   const body = [...Array(actualSize).fill(WORK), CARRY];
-
-  spawn.spawnCreep(body, name, { memory: { role: Roles.BUILDER } });
+  console.log(Game.rooms[room].energyCapacityAvailable, body);
+  console.log(spawn.spawnCreep(body, name, { memory: { role: Roles.BUILDER } }));
 }

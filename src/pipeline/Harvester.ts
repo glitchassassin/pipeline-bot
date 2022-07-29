@@ -6,6 +6,12 @@ import { recoverDroppedResources } from 'utils/recoverDroppedResources';
 import { Pipeline } from './Pipeline';
 import { bestHarvestingSquare } from './selectors/bestHarvestingSquare';
 
+declare global {
+  interface CreepMemory {
+    expires?: number;
+  }
+}
+
 export class Harvester extends Pipeline {
   _source: Id<Source>;
   _harvesters: string[] = [];
@@ -60,7 +66,9 @@ export class Harvester extends Pipeline {
         // max spots available
         this.harvesterPositions.length
       );
-      if (this._harvesters.length < maxHarvesters) {
+      if (
+        this.harvesters.filter(c => (c.ticksToLive ?? CREEP_LIFE_TIME) > (c.memory.expires ?? 0)).length < maxHarvesters
+      ) {
         spawn[Roles.HARVESTER](this);
         return true;
       }
@@ -76,6 +84,9 @@ export class Harvester extends Pipeline {
       if (!creep.pos.isEqualTo(this.harvesterPositions[i]) && !creep.spawning) {
         creep.memory.pullTarget = packPos(this.harvesterPositions[i]);
       }
+
+      if (creep.pos.isEqualTo(this.harvesterPositions[i]))
+        creep.memory.expires ??= CREEP_LIFE_TIME - creep.ticksToLive!;
 
       // otherwise, harvest
       creep.harvest(this.source);

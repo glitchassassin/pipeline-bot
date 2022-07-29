@@ -1,4 +1,4 @@
-import { runConstructionService } from 'construction-service/manager';
+import { runConstructionService, spawnConstructionService } from 'construction-service/manager';
 import { PipelinesByRoom } from 'pipeline/byRoom';
 import { initializeRoom } from 'pipeline/initializeRoom';
 import 'prototypes';
@@ -24,14 +24,12 @@ export const loop = () => {
     pipelines.forEach(p => {
       p.survey();
       if (!spawned) spawned ||= p.runSpawn();
+      spawnConstructionService(room);
       p.run();
+      runConstructionService(room);
       p.visualize();
     });
 
     planStructures(room);
   }
-
-  // gets last priority with spawns
-  runConstructionService();
-  // console.log('Runtime', Game.cpu.getUsed(), Game.cpu.bucket);
 };

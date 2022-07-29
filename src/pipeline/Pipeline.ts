@@ -140,6 +140,7 @@ export class Pipeline {
       // Cancel pipes if we no longer have a puller
       if (
         this.spawn.spawning.name.includes(Roles.PIPE) &&
+        this.firstSegment &&
         !this.firstSegment?.body.some(p => p.type === MOVE) &&
         this._pullers.length === 0
       ) {

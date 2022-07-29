@@ -44,7 +44,7 @@ export class Upgrader extends Pipeline {
   runSpawn(): boolean {
     if (this.spawn.spawning) return super.runSpawn();
     if (!this.intact) {
-      // only spawn one upgrader
+      // build the pipeline first
       return super.runSpawn();
     } else {
       // spawn as many upgraders as we need
