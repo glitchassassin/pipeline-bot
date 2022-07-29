@@ -5,6 +5,7 @@ import 'prototypes';
 import { updateMetrics } from 'roles/selectors';
 import { planStructures } from 'structures/plan';
 import { runTaxiService } from 'taxi-service/manager';
+import { runTowers } from 'tower-service/manager';
 import 'ts-polyfill/lib/es2019-array';
 
 export const loop = () => {
@@ -16,6 +17,7 @@ export const loop = () => {
   }
 
   updateMetrics();
+  runTowers();
 
   // gets first priority with spawns
   runTaxiService();
