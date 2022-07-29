@@ -2,7 +2,7 @@ const roomEnergyLevels = new Map<string, number[]>();
 
 export function roomEnergy(room: string) {
   const energyLevels = roomEnergyLevels.get(room) ?? [];
-  return Math.max(...energyLevels, 0);
+  return Math.max(...energyLevels, 300);
 }
 
 export function updateMetrics() {
