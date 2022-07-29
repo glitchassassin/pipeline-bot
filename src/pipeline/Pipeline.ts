@@ -236,7 +236,7 @@ export class Pipeline {
     // Defrag pipeline
     for (const index of this.pullSpots()) {
       const creep = this.pipes[index];
-      if (!creep) continue;
+      if (!creep || creep.fatigue) continue;
 
       const pipes = this.type === 'OUTPUT' ? this.pipes.slice().reverse() : this.pipes;
       const currentIndex = this.type === 'OUTPUT' ? this.pipes.length - index - 1 : index;
@@ -244,6 +244,7 @@ export class Pipeline {
       for (let i = currentIndex; i > 0; i--) {
         let puller = pipes[i];
         let pullee = pipes[i - 1];
+        pullee?.drop(RESOURCE_ENERGY); // minimize fatigue by not trying to carry resources; will be recovered next tick
         if (puller && pullee) {
           puller.pull(pullee);
           pullee.move(puller);
