@@ -1,4 +1,5 @@
 import { unpackPos } from 'packrat';
+import { roomEnergy } from 'roles/selectors';
 import { Roles } from 'roles/_roles';
 import { recycleCreep } from 'utils/recycleCreep';
 import { getAssignment, pullDone } from './assignments';
@@ -44,7 +45,7 @@ export function runTaxi(creep: Creep) {
 export function spawnTaxi(room: string, size: number) {
   const spawn = Game.rooms[room]?.find(FIND_MY_SPAWNS).find(s => !s.spawning);
   if (!spawn) return;
-  const actualSize = Math.min(size, Math.floor(Game.rooms[room].energyCapacityAvailable / BODYPART_COST[MOVE]));
+  const actualSize = Math.min(size, Math.floor(roomEnergy(room) / BODYPART_COST[MOVE]));
   const name = `${Roles.TAXI}-${room}-${Game.time}`;
   spawn.spawnCreep(Array(actualSize).fill(MOVE), name, { memory: { role: Roles.TAXI } });
 }

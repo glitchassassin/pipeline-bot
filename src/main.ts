@@ -2,6 +2,7 @@ import { runConstructionService, spawnConstructionService } from 'construction-s
 import { PipelinesByRoom } from 'pipeline/byRoom';
 import { initializeRoom } from 'pipeline/initializeRoom';
 import 'prototypes';
+import { updateMetrics } from 'roles/selectors';
 import { planStructures } from 'structures/plan';
 import { runTaxiService } from 'taxi-service/manager';
 import 'ts-polyfill/lib/es2019-array';
@@ -13,6 +14,8 @@ export const loop = () => {
       delete Memory.creeps[name];
     }
   }
+
+  updateMetrics();
 
   // gets first priority with spawns
   runTaxiService();

@@ -1,5 +1,6 @@
 import { packPos } from 'packrat';
 import { PipelinesByRoom } from 'pipeline/byRoom';
+import { roomEnergy } from 'roles/selectors';
 import { Roles } from 'roles/_roles';
 import { nearbyWalkablePositions } from 'selectors';
 import { energyBuffer } from './selectors';
@@ -53,11 +54,9 @@ export function runBuilder(creep: Creep) {
 export function spawnBuilder(room: string) {
   const spawn = Game.rooms[room]?.find(FIND_MY_SPAWNS).find(s => !s.spawning);
   if (!spawn) return;
-  const actualSize = Math.floor(
-    (Game.rooms[room].energyCapacityAvailable - BODYPART_COST[CARRY]) / BODYPART_COST[WORK]
-  );
+  const actualSize = Math.floor((roomEnergy(room) - BODYPART_COST[CARRY]) / BODYPART_COST[WORK]);
   const name = `${Roles.BUILDER}-${room}-${Game.time}`;
   const body = [...Array(actualSize).fill(WORK), CARRY];
-  console.log(Game.rooms[room].energyCapacityAvailable, body);
+  console.log(roomEnergy(room), body);
   console.log(spawn.spawnCreep(body, name, { memory: { role: Roles.BUILDER } }));
 }

@@ -200,13 +200,15 @@ export class Pipeline {
           .find(s => s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY));
         if (container) this.firstSegment?.transfer(container, RESOURCE_ENERGY);
       }
-    } else if (
-      this.type === 'OUTPUT' &&
-      this.intact &&
-      this.spawn.store.getFreeCapacity(RESOURCE_ENERGY) === 0 &&
-      Game.time % 2 === 0
-    ) {
-      this.firstSegment?.withdraw(this.spawn, RESOURCE_ENERGY);
+    } else if (this.type === 'OUTPUT' && this.intact) {
+      const container = this.firstSegment?.pos
+        .findInRange(FIND_STRUCTURES, 1)
+        .find(s => s instanceof StructureContainer);
+      if (container) {
+        this.firstSegment?.withdraw(container, RESOURCE_ENERGY);
+      } else if (this.spawn.store.getFreeCapacity(RESOURCE_ENERGY) === 0 && Game.time % 2 === 0) {
+        this.firstSegment?.withdraw(this.spawn, RESOURCE_ENERGY);
+      }
     }
 
     for (let i = 0; i < this.pipes.length - 1; i++) {
