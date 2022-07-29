@@ -57,6 +57,5 @@ export function spawnBuilder(room: string) {
   const actualSize = Math.floor((roomEnergy(room) - BODYPART_COST[CARRY]) / BODYPART_COST[WORK]);
   const name = `${Roles.BUILDER}-${room}-${Game.time}`;
   const body = [...Array(actualSize).fill(WORK), CARRY];
-  console.log(roomEnergy(room), body);
-  console.log(spawn.spawnCreep(body, name, { memory: { role: Roles.BUILDER } }));
+  spawn.spawnCreep(body, name, { memory: { role: Roles.BUILDER } });
 }

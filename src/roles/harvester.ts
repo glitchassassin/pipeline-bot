@@ -5,7 +5,7 @@ import { Roles } from './_roles';
 export function spawn(pipeline: Harvester) {
   const name = Roles.HARVESTER + '-' + Game.time;
   const actualSize = Math.min(5, Math.floor((roomEnergy(pipeline.room) - BODYPART_COST[CARRY]) / BODYPART_COST[WORK]));
-  console.log('harvester', actualSize);
+
   const result = pipeline.spawn.spawnCreep([...Array(actualSize).fill(WORK), CARRY], name, {
     memory: { role: Roles.HARVESTER, pipeline: pipeline.source.id }
   });
