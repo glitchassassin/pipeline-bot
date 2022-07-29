@@ -3,6 +3,7 @@ import { PipelinesByRoom } from 'pipeline/byRoom';
 import { roomEnergy } from 'roles/selectors';
 import { Roles } from 'roles/_roles';
 import { nearbyWalkablePositions } from 'selectors';
+import { inputSquare, outputSquare } from 'structures/anchors';
 import { energyBuffer } from './selectors';
 import { worklist } from './worklist';
 
@@ -54,8 +55,11 @@ export function runBuilder(creep: Creep) {
 export function spawnBuilder(room: string) {
   const spawn = Game.rooms[room]?.find(FIND_MY_SPAWNS).find(s => !s.spawning);
   if (!spawn) return;
+  const directions = [TOP, TOP_LEFT, TOP_RIGHT, LEFT, RIGHT, BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT].filter(
+    d => d !== spawn.pos.getDirectionTo(inputSquare(spawn)) && d !== spawn.pos.getDirectionTo(outputSquare(spawn))
+  );
   const actualSize = Math.floor((roomEnergy(room) - BODYPART_COST[CARRY]) / BODYPART_COST[WORK]);
   const name = `${Roles.BUILDER}-${room}-${Game.time}`;
   const body = [...Array(actualSize).fill(WORK), CARRY];
-  spawn.spawnCreep(body, name, { memory: { role: Roles.BUILDER } });
+  spawn.spawnCreep(body, name, { memory: { role: Roles.BUILDER }, directions });
 }

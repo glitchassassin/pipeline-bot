@@ -80,6 +80,7 @@ export class Harvester extends Pipeline {
 
     // harvest
     this.harvesters.forEach((creep, i) => {
+      if (i >= this.harvesterPositions.length) return; // surplus harvester
       // register tow, if needed
       if (!creep.pos.isEqualTo(this.harvesterPositions[i]) && !creep.spawning) {
         creep.memory.pullTarget = packPos(this.harvesterPositions[i]);
