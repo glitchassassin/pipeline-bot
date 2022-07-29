@@ -15,8 +15,6 @@ export function runBuilder(creep: Creep) {
       .findInRange(FIND_MY_CREEPS, 1)
       .find(c => c.memory.role === Roles.PIPE && c.store.getUsedCapacity(RESOURCE_ENERGY) > 0);
 
-  console.log(creep, pipelineTarget);
-
   // check for new build target position
   if (!buildTarget) {
     const nextTarget = worklist(creep.room.name)[0];
@@ -60,7 +58,6 @@ export function spawnBuilder(room: string) {
   );
   const name = `${Roles.BUILDER}-${room}-${Game.time}`;
   const body = [...Array(actualSize).fill(WORK), CARRY];
-  console.log(Game.rooms[room].energyCapacityAvailable, 'body', body);
 
-  console.log(spawn.spawnCreep(body, name, { memory: { role: Roles.BUILDER } }));
+  spawn.spawnCreep(body, name, { memory: { role: Roles.BUILDER } });
 }

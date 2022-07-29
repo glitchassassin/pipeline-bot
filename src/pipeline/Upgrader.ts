@@ -50,7 +50,7 @@ export class Upgrader extends Pipeline {
       // spawn as many upgraders as we need
       const maxUpgraders = Math.min(
         // max needed
-        Math.ceil(10 / Math.floor(Game.rooms[this.room].energyCapacityAvailable / BODYPART_COST[WORK])),
+        Math.ceil(15 / Math.min(8, Math.floor(Game.rooms[this.room].energyCapacityAvailable / BODYPART_COST[WORK]))),
         // max spots available
         this.upgraderPositions.length
       );

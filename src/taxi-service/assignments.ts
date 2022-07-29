@@ -1,3 +1,5 @@
+import { unpackPos } from 'packrat';
+
 /**
  * These assignments are between creeps, so the object doesn't need to be specific to a single room.
  * Creep names are enough to keep this unique.
@@ -21,6 +23,10 @@ export function assignPuller(creep: Creep, puller: Creep) {
 
 export function getAssignment(puller: Creep) {
   for (const [creepName, pullerName] of Object.entries(assignments)) {
+    const pullTarget = Game.creeps[creepName]?.memory.pullTarget
+      ? unpackPos(Game.creeps[creepName].memory.pullTarget!)
+      : undefined;
+    if (pullTarget?.lookFor(LOOK_CREEPS).length) continue; // target square is occupied
     if (puller.name === pullerName) return creepName;
   }
   return undefined;

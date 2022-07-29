@@ -3,7 +3,11 @@ import { Roles } from './_roles';
 
 export function spawn(pipeline: Upgrader) {
   const name = Roles.UPGRADER + '-' + Game.time;
-  const result = pipeline.spawn.spawnCreep([WORK, WORK, CARRY], name, {
+  const actualSize = Math.min(
+    8,
+    Math.floor((Game.rooms[pipeline.room].energyCapacityAvailable - BODYPART_COST[CARRY]) / BODYPART_COST[WORK])
+  );
+  const result = pipeline.spawn.spawnCreep([...Array(actualSize).fill(WORK), CARRY], name, {
     memory: { role: Roles.UPGRADER, pipeline: pipeline.controller.id }
   });
 

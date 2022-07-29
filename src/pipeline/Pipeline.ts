@@ -3,6 +3,7 @@ import { leavePipeline } from 'roles/behaviors/leavePipeline';
 import { Roles } from 'roles/_roles';
 import { inputSquare, outputSquare } from 'structures/anchors';
 import { recoverDroppedResources } from 'utils/recoverDroppedResources';
+import { PipelinesByRoom } from './byRoom';
 import { getPipelinePath } from './selectors/getPipelinePath';
 
 const TRANSFER_THRESHOLD = CARRY_CAPACITY / 2;
@@ -149,8 +150,23 @@ export class Pipeline {
       return false;
     }
     // Start with a puller
-    else if (this.needsPuller() && this.pullers.filter(p => !p.ticksToLive || p.ticksToLive > 6).length === 0)
-      spawn[Roles.PULLER](this);
+    else if (this.needsPuller() && this.pullers.filter(p => !p.ticksToLive || p.ticksToLive > 6).length === 0) {
+      // First check if we can steal someone else's puller
+      let stolen = false;
+      for (const pipeline of PipelinesByRoom.get(this.room) ?? []) {
+        if (pipeline.id === this.id) continue;
+        if (!pipeline.needsPuller()) {
+          const puller = pipeline._pullers.shift();
+          if (puller) {
+            this._pullers.push(puller);
+            Game.creeps[puller].memory.pipeline = this.id;
+            stolen = true;
+            break;
+          }
+        }
+      }
+      if (!stolen) spawn[Roles.PULLER](this);
+    }
     // Add pipeline parts
     else if (this._pipes.length < this.path.length - 1) spawn[Roles.PIPE](this);
     else return false; // no spawning needed

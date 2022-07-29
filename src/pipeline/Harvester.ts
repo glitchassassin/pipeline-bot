@@ -51,11 +51,12 @@ export class Harvester extends Pipeline {
         return true;
       }
     } else {
-      if (!this.pullers.length) return super.runSpawn(); // wait until there's a puller
       // spawn as many harvesters as we need
       const maxHarvesters = Math.min(
         // max needed
-        Math.ceil(5 / Math.floor(Game.rooms[this.room].energyCapacityAvailable / BODYPART_COST[WORK])),
+        Math.ceil(
+          5 / Math.floor((Game.rooms[this.room].energyCapacityAvailable - BODYPART_COST[CARRY]) / BODYPART_COST[WORK])
+        ),
         // max spots available
         this.harvesterPositions.length
       );
