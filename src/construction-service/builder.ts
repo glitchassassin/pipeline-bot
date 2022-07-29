@@ -9,23 +9,24 @@ import { worklist } from './worklist';
 
 export function runBuilder(creep: Creep) {
   let buildTarget = creep.pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 3)[0];
-  let pipelineTarget =
-    creep.pos
+  const inputPipelines = PipelinesByRoom.get(creep.room.name)?.filter(p => p.type === 'INPUT') ?? [];
+  let pipelineTargets = [
+    ...creep.pos
       .findInRange(FIND_STRUCTURES, 1)
-      .find(c => c.structureType === STRUCTURE_CONTAINER && c.store.getUsedCapacity(RESOURCE_ENERGY) > 0) ??
-    creep.pos
+      .filter((c): c is StructureContainer => c.structureType === STRUCTURE_CONTAINER),
+    ...creep.pos
       .findInRange(FIND_MY_CREEPS, 1)
-      .find(c => c.memory.role === Roles.PIPE && c.store.getUsedCapacity(RESOURCE_ENERGY) > 0);
+      .filter(c => c.memory.role === Roles.PIPE && inputPipelines.some(p => p.id === c.memory.pipeline))
+  ];
+  let pipelineTarget = pipelineTargets.find(c => c.store.getUsedCapacity(RESOURCE_ENERGY) > 0);
 
   // check for new build target position
-  if (!buildTarget) {
+  if (!buildTarget || !pipelineTargets.length) {
     const nextTarget = worklist(creep.room.name)[0];
     if (!nextTarget) return; // TODO - Recycle
     let bestPos: RoomPosition | undefined;
     let bestScore = 0;
-    const pipelines = PipelinesByRoom.get(creep.room.name)
-      ?.filter(p => p.type === 'INPUT')
-      .flatMap(p => p.path);
+    const pipelines = inputPipelines.flatMap(p => p.path);
     for (const pos of nearbyWalkablePositions(nextTarget.pos, 3, false)) {
       if (!pipelines?.some(p => p.inRangeTo(pos, 1))) continue;
       const sites = pos.findInRange(FIND_MY_CONSTRUCTION_SITES, 3).length;

@@ -86,16 +86,16 @@ export class Harvester extends Pipeline {
         creep.memory.pullTarget = packPos(this.harvesterPositions[i]);
       }
 
-      if (creep.pos.isEqualTo(this.harvesterPositions[i]))
+      if (creep.pos.isEqualTo(this.harvesterPositions[i])) {
         creep.memory.expires ??= CREEP_LIFE_TIME - creep.ticksToLive!;
+        recoverDroppedResources(creep);
+      }
 
       // otherwise, harvest
       creep.harvest(this.source);
       if (creep.store.getFreeCapacity() <= 10 && this.primaryHarvester && creep.id !== this.primaryHarvester.id) {
         creep.transfer(this.primaryHarvester, RESOURCE_ENERGY);
       }
-
-      recoverDroppedResources(creep);
     });
 
     // run main pipeline tasks

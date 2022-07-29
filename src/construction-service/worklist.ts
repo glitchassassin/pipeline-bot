@@ -14,6 +14,8 @@ export function worklist(room: string) {
           if (!list.some(l => l.id === site.id)) list.push(site);
           return list;
         }, <ConstructionSite[]>[]) ?? [];
+    if (cached.some(s => s.structureType === STRUCTURE_CONTAINER))
+      cached = cached.filter(s => s.structureType === STRUCTURE_CONTAINER);
     updated = Game.time;
   }
 
