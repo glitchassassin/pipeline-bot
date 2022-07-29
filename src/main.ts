@@ -1,5 +1,9 @@
+import { runConstructionService } from 'construction-service/manager';
 import { PipelinesByRoom } from 'pipeline/byRoom';
 import { initializeRoom } from 'pipeline/initializeRoom';
+import 'prototypes';
+import { planStructures } from 'structures/plan';
+import { runTaxiService } from 'taxi-service/manager';
 import 'ts-polyfill/lib/es2019-array';
 
 export const loop = () => {
@@ -9,6 +13,9 @@ export const loop = () => {
       delete Memory.creeps[name];
     }
   }
+
+  // gets first priority with spawns
+  runTaxiService();
 
   for (const room in Game.rooms) {
     initializeRoom(room);
@@ -20,6 +27,11 @@ export const loop = () => {
       p.run();
       p.visualize();
     });
+
+    planStructures(room);
   }
+
+  // gets last priority with spawns
+  runConstructionService();
   // console.log('Runtime', Game.cpu.getUsed(), Game.cpu.bucket);
 };

@@ -1,6 +1,8 @@
+import { packPos } from 'packrat';
 import { spawn } from 'roles';
 import { Roles } from 'roles/_roles';
 import { adjacentWalkablePositions, byId } from 'selectors';
+import { recoverDroppedResources } from 'utils/recoverDroppedResources';
 import { Pipeline } from './Pipeline';
 import { bestHarvestingSquare } from './selectors/bestHarvestingSquare';
 
@@ -31,6 +33,9 @@ export class Harvester extends Pipeline {
   get primaryHarvester() {
     return this.harvesters.find(c => c.pos.isEqualTo(this.endpoint));
   }
+  get blockSquares(): RoomPosition[] {
+    return this.harvesterPositions;
+  }
   survey(): void {
     if (this._surveyed !== Game.time) {
       this._harvesters = this._harvesters?.filter(n => Game.creeps[n]);
@@ -38,7 +43,7 @@ export class Harvester extends Pipeline {
     super.survey();
   }
   runSpawn(): boolean {
-    if (!this.pullers.length) return super.runSpawn(); // wait until there's a puller
+    if (this.spawn.spawning) return super.runSpawn();
     if (!this.intact) {
       // only spawn one harvester
       if (this._harvesters.length < 1) {
@@ -46,6 +51,7 @@ export class Harvester extends Pipeline {
         return true;
       }
     } else {
+      if (!this.pullers.length) return super.runSpawn(); // wait until there's a puller
       // spawn as many harvesters as we need
       const maxHarvesters = Math.min(
         // max needed
@@ -67,7 +73,7 @@ export class Harvester extends Pipeline {
     this.harvesters.forEach((creep, i) => {
       // register tow, if needed
       if (!creep.pos.isEqualTo(this.harvesterPositions[i]) && !creep.spawning) {
-        this.registerTow(creep, () => this.harvesterPositions[i]);
+        creep.memory.pullTarget = packPos(this.harvesterPositions[i]);
       }
 
       // otherwise, harvest
@@ -75,6 +81,8 @@ export class Harvester extends Pipeline {
       if (creep.store.getFreeCapacity() <= 10 && this.primaryHarvester && creep.id !== this.primaryHarvester.id) {
         creep.transfer(this.primaryHarvester, RESOURCE_ENERGY);
       }
+
+      recoverDroppedResources(creep);
     });
 
     // run main pipeline tasks
@@ -82,7 +90,11 @@ export class Harvester extends Pipeline {
   }
   visualize(): void {
     this.harvesterPositions.forEach(p =>
-      new RoomVisual(p.roomName).rect(p.x - 0.5, p.y - 0.5, 1, 1, { stroke: 'yellow', fill: 'transparent' })
+      new RoomVisual(p.roomName).rect(p.x - 0.5, p.y - 0.5, 1, 1, {
+        stroke: 'yellow',
+        fill: 'transparent',
+        opacity: 0.3
+      })
     );
     super.visualize();
   }

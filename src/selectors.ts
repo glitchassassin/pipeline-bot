@@ -75,7 +75,10 @@ export const isPositionWalkable = (
 
 export function avoidMostCreepsCostMatrix(room: string, ignore: RoomPosition[]) {
   const cm = new PathFinder.CostMatrix();
-  for (const structure of Game.rooms[room]?.find(FIND_STRUCTURES) ?? []) {
+  for (const structure of [
+    ...(Game.rooms[room]?.find(FIND_STRUCTURES) ?? []),
+    ...(Game.rooms[room]?.find(FIND_MY_CONSTRUCTION_SITES) ?? [])
+  ]) {
     if (OBSTACLE_OBJECT_TYPES.includes(structure.structureType as any)) {
       cm.set(structure.pos.x, structure.pos.y, 255);
     }
@@ -87,3 +90,16 @@ export function avoidMostCreepsCostMatrix(room: string, ignore: RoomPosition[]) 
   }
   return cm;
 }
+
+export const sortByDistanceTo = <T extends RoomPosition | _HasRoomPosition>(pos: RoomPosition) => {
+  let distance = new Map<RoomPosition, number>();
+  return (a: T, b: T) => {
+    let aPos = a instanceof RoomPosition ? a : (a as _HasRoomPosition).pos;
+    let bPos = b instanceof RoomPosition ? b : (b as _HasRoomPosition).pos;
+    if (!distance.has(aPos)) {
+      distance.set(aPos, pos.getRangeTo(aPos));
+    }
+    if (!distance.has(bPos)) distance.set(bPos, pos.getRangeTo(bPos));
+    return (distance.get(aPos) as number) - (distance.get(bPos) as number);
+  };
+};

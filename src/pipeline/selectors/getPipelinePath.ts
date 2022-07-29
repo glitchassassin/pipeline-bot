@@ -1,5 +1,7 @@
 import { packPos, packPosList, unpackPosList } from 'packrat';
 import { PipelinesByRoom } from 'pipeline/byRoom';
+import { adjacentWalkablePositions } from 'selectors';
+import { inputSquare, outputSquare } from 'structures/anchors';
 
 declare global {
   interface Memory {
@@ -13,6 +15,8 @@ function pipelineCostMatrix(room: string, type: 'INPUT' | 'OUTPUT') {
   const cm = new PathFinder.CostMatrix();
   const terrain = Game.map.getRoomTerrain(room);
   const sources = Game.rooms[room].find(FIND_SOURCES);
+  const spawn = Game.rooms[room].find(FIND_MY_SPAWNS)[0];
+
   const isWall = (x: number, y: number) =>
     terrain.get(x, y) === TERRAIN_MASK_WALL && !sources.some(s => s.pos.x === x && s.pos.y === y);
   for (let x = 0; x < 50; x++) {
@@ -28,6 +32,14 @@ function pipelineCostMatrix(room: string, type: 'INPUT' | 'OUTPUT') {
     }
   }
 
+  // block off spawn-adjacent squares
+  for (const pos of adjacentWalkablePositions(spawn.pos, true)) {
+    if (!pos.isEqualTo(inputSquare(spawn)) && !pos.isEqualTo(outputSquare(spawn))) {
+      cm.set(pos.x, pos.y, 255);
+    }
+  }
+  cm.set(spawn.pos.x, spawn.pos.y, 255);
+
   const pipelines = PipelinesByRoom.get(room) ?? [];
   for (const pipeline of pipelines) {
     if (pipeline.type === 'INPUT' && type === 'INPUT') {
@@ -37,6 +49,7 @@ function pipelineCostMatrix(room: string, type: 'INPUT' | 'OUTPUT') {
       console.log('avoiding existing path from pipeline', pipeline.id);
       pipeline.path.forEach(pos => cm.set(pos.x, pos.y, 255)); // avoid incompatible pipelines
     }
+    pipeline.blockSquares.forEach(pos => cm.set(pos.x, pos.y, 255)); // avoid blocked squares
   }
 
   return cm;
@@ -55,8 +68,8 @@ export function getPipelinePath(from: RoomPosition, to: RoomPosition, type: 'INP
     if (path.incomplete) {
       return;
     }
-    Memory.paths[key] = packPosList([...path.path, to]);
-    return [...path.path, to];
+    Memory.paths[key] = packPosList([from, ...path.path, to]);
+    return [from, ...path.path, to];
   }
   return unpackPosList(Memory.paths[key]);
 }

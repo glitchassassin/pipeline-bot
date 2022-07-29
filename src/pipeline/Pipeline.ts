@@ -1,6 +1,8 @@
 import { roles, spawn } from 'roles';
 import { leavePipeline } from 'roles/behaviors/leavePipeline';
 import { Roles } from 'roles/_roles';
+import { inputSquare, outputSquare } from 'structures/anchors';
+import { recoverDroppedResources } from 'utils/recoverDroppedResources';
 import { getPipelinePath } from './selectors/getPipelinePath';
 
 const TRANSFER_THRESHOLD = CARRY_CAPACITY / 2;
@@ -21,8 +23,11 @@ export class Pipeline {
   ) {
     console.log('New pipeline between', spawn, endpoint);
     this._spawn = spawn.name;
-    this.path = getPipelinePath(spawn.pos, endpoint, type)!;
-    if (!this.path) throw new Error(`Unable to create path for pipeline between ${spawn.pos} and ${endpoint}`);
+    const startingPoint = this.type === 'INPUT' ? inputSquare(spawn) : outputSquare(spawn);
+    this.path = getPipelinePath(startingPoint, endpoint, type)!;
+    if (!this.path) throw new Error(`Unable to create path for pipeline between ${startingPoint} and ${endpoint}`);
+    // this.path.unshift(this.spawn.pos);
+
     if (type === 'OUTPUT') this.path.reverse();
     this._pipes = Game.rooms[this.room]
       .find(FIND_MY_CREEPS)
@@ -54,10 +59,14 @@ export class Pipeline {
     return pullers.filter(c => !c.spawning);
   }
   get intact() {
-    return this.pipes.every(p => p !== undefined && p.memory.role !== Roles.PULLER);
+    const pipes = this.type === 'INPUT' ? this.pipes.slice(0, -1) : this.pipes.slice(1);
+    return pipes.every(p => p?.memory.role === Roles.PIPE);
   }
   get spawn() {
     return Game.spawns[this._spawn];
+  }
+  get blockSquares(): RoomPosition[] {
+    return [];
   }
   // true if spawn is making a new pipe for our pipeline
   spawningPipe() {
@@ -84,6 +93,7 @@ export class Pipeline {
   }
 
   haulSpots() {
+    if (this.type !== 'INPUT') return [];
     this.survey();
     const spots: number[] = [];
     for (let i = 0; i < this.path.length - 1; i++) {
@@ -99,48 +109,48 @@ export class Pipeline {
     return spots;
   }
 
-  _tows: Record<string, () => RoomPosition> = {};
-  registerTow(creep: Creep, destination: () => RoomPosition) {
-    this._tows[creep.name] = destination;
+  get firstSegment() {
+    return this.type === 'INPUT' ? this.pipes[0] : this.pipes[this.pipes.length - 1];
   }
-  requestTowee(name?: string): [string, () => RoomPosition] | [] {
-    if (name && this._tows[name]) return [name, this._tows[name]];
-    for (const c in this._tows) {
-      if (!Game.creeps[c]) {
-        delete this._tows[c];
-      } else if (!this.pullers.some(p => p.memory.pullTarget === c)) {
-        return [c, this._tows[c]];
-      }
-    }
-    return [];
-  }
-  towFinished(name: string) {
-    delete this._tows[name];
+
+  needsPuller() {
+    return (
+      this.pullSpots().length ||
+      this.haulSpots().length ||
+      (this.firstSegment?.memory.role === Roles.PIPE && !this.intact)
+    );
   }
 
   visualize() {
     const viz = new RoomVisual(this.room);
-    viz.poly(this.path);
+    viz.poly(this.path, { opacity: 0.3 });
+    // viz.circle(inputSquare(this.spawn), { radius: 0.5, stroke: 'green', fill: 'transparent' });
+    // viz.circle(outputSquare(this.spawn), { radius: 0.5, stroke: 'red', fill: 'transparent' });
     for (const spot of this.pullSpots().map(i => this.path[i])) {
-      viz.rect(spot.x - 0.5, spot.y - 0.5, 1, 1, { stroke: '#00ff00', fill: 'transparent' });
+      viz.rect(spot.x - 0.5, spot.y - 0.5, 1, 1, { stroke: '#00ff00', fill: 'transparent', opacity: 0.3 });
     }
     for (const spot of this.haulSpots().map(i => this.path[i])) {
-      viz.rect(spot.x - 0.5, spot.y - 0.5, 1, 1, { stroke: '#00ffff', fill: 'transparent' });
+      viz.rect(spot.x - 0.5, spot.y - 0.5, 1, 1, { stroke: '#00ffff', fill: 'transparent', opacity: 0.3 });
     }
   }
 
   runSpawn() {
     if (this.spawn.spawning && this.spawn.spawning.name.includes(this.id)) {
       // Cancel pipes if we no longer have a puller
-      if (this.spawn.spawning.name.includes(Roles.PIPE) && this._pullers.length === 0) {
+      if (
+        this.spawn.spawning.name.includes(Roles.PIPE) &&
+        !this.firstSegment?.body.some(p => p.type === MOVE) &&
+        this._pullers.length === 0
+      ) {
         console.log('canceling', this.spawn.spawning.name);
         this._pipes.splice(this._pipes.indexOf(this.spawn.spawning.name));
         this.spawn.spawning.cancel(); // No living pullers, cancel to fix that situation
       }
-      return true;
+      return false;
     }
     // Start with a puller
-    else if (this.pullers.filter(p => !p.ticksToLive || p.ticksToLive > 6).length === 0) spawn[Roles.PULLER](this);
+    else if (this.needsPuller() && this.pullers.filter(p => !p.ticksToLive || p.ticksToLive > 6).length === 0)
+      spawn[Roles.PULLER](this);
     // Add pipeline parts
     else if (this._pipes.length < this.path.length - 1) spawn[Roles.PIPE](this);
     else return false; // no spawning needed
@@ -153,13 +163,53 @@ export class Pipeline {
     // Pipe energy
     // Pipes send to spawn or to prior spawn links
     if (this.type === 'INPUT') {
-      this.pipes[0]?.transfer(this.spawn, RESOURCE_ENERGY);
-    } else if (this.type === 'OUTPUT' && this.intact && this.spawn.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
-      this.pipes[this.pipes.length - 1]?.withdraw(this.spawn, RESOURCE_ENERGY);
+      this.firstSegment?.transfer(this.spawn, RESOURCE_ENERGY);
+      if (
+        this.pipes.slice(0, 3).every(p => p?.store.getFreeCapacity(RESOURCE_ENERGY)) &&
+        this.spawn.store.getFreeCapacity(RESOURCE_ENERGY)
+      ) {
+        // refill from container
+        const container = this.firstSegment?.pos
+          .findInRange(FIND_STRUCTURES, 1)
+          .find(s => s.structureType === STRUCTURE_CONTAINER && s.store.getUsedCapacity(RESOURCE_ENERGY));
+        if (container) this.firstSegment?.withdraw(container, RESOURCE_ENERGY);
+      } else if (
+        this.pipes.slice(0, 3).every(p => p?.store.getFreeCapacity(RESOURCE_ENERGY) === 0) &&
+        this.spawn.store.getFreeCapacity(RESOURCE_ENERGY) === 0
+      ) {
+        // dump excess to container
+        const container = this.firstSegment?.pos
+          .findInRange(FIND_STRUCTURES, 1)
+          .find(s => s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY));
+        if (container) this.firstSegment?.transfer(container, RESOURCE_ENERGY);
+      }
+    } else if (
+      this.type === 'OUTPUT' &&
+      this.intact &&
+      this.spawn.store.getFreeCapacity(RESOURCE_ENERGY) === 0 &&
+      Game.time % 2 === 0
+    ) {
+      this.firstSegment?.withdraw(this.spawn, RESOURCE_ENERGY);
     }
+
     for (let i = 0; i < this.pipes.length - 1; i++) {
       const to = this.pipes[i];
       const from = this.pipes[i + 1];
+      if (to) recoverDroppedResources(to);
+      if (from) {
+        // attempt to deliver to structures first
+        const target = from.pos
+          .findInRange(FIND_MY_STRUCTURES, 1)
+          .find(
+            s =>
+              (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_TOWER) &&
+              s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+          );
+        if (target) {
+          from.transfer(target, RESOURCE_ENERGY);
+          continue;
+        }
+      }
       if (!from || !to || from.store.getUsedCapacity() < TRANSFER_THRESHOLD) continue;
       from.transfer(to, RESOURCE_ENERGY);
     }
@@ -205,7 +255,7 @@ export class Pipeline {
         } else if (this.pipes[index - 1]) {
           creep.transfer(this.pipes[index - 1]!, RESOURCE_ENERGY);
           continue;
-        } else if (index !== 1 || this.spawningPipe()) {
+        } else if (index !== 1 || !this.spawningPipe()) {
           creep.moveByPath(this.path.slice().reverse());
         }
       } else {

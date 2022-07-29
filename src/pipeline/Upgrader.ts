@@ -1,3 +1,4 @@
+import { packPos } from 'packrat';
 import { spawn } from 'roles';
 import { Roles } from 'roles/_roles';
 import { byId, calculateNearbyPositions } from 'selectors';
@@ -28,6 +29,9 @@ export class Upgrader extends Pipeline {
   get upgraders() {
     return this._upgraders.map(c => Game.creeps[c]).filter((c): c is Creep => !!c);
   }
+  get blockSquares() {
+    return this.upgraderPositions;
+  }
   get primaryUpgrader() {
     return this.upgraders.find(c => c.pos.isEqualTo(this.endpoint));
   }
@@ -38,13 +42,10 @@ export class Upgrader extends Pipeline {
     super.survey();
   }
   runSpawn(): boolean {
-    if (!this.pullers.length) return super.runSpawn(); // wait until there's a puller
+    if (this.spawn.spawning) return super.runSpawn();
     if (!this.intact) {
       // only spawn one upgrader
-      if (this._upgraders.length < 1) {
-        spawn[Roles.UPGRADER](this);
-        return true;
-      }
+      return super.runSpawn();
     } else {
       // spawn as many upgraders as we need
       const maxUpgraders = Math.min(
@@ -53,6 +54,7 @@ export class Upgrader extends Pipeline {
         // max spots available
         this.upgraderPositions.length
       );
+
       if (this._upgraders.length < maxUpgraders) {
         spawn[Roles.UPGRADER](this);
         return true;
@@ -68,7 +70,7 @@ export class Upgrader extends Pipeline {
     this.upgraders.forEach((creep, i) => {
       // register tow, if needed
       if (!creep.pos.isEqualTo(this.upgraderPositions[i]) && !creep.spawning) {
-        this.registerTow(creep, () => this.upgraderPositions[i]);
+        creep.memory.pullTarget = packPos(this.upgraderPositions[i]);
       }
 
       // otherwise, upgrade
@@ -90,7 +92,7 @@ export class Upgrader extends Pipeline {
   }
   visualize(): void {
     this.upgraderPositions.forEach(p =>
-      new RoomVisual(p.roomName).rect(p.x - 0.5, p.y - 0.5, 1, 1, { stroke: 'cyan', fill: 'transparent' })
+      new RoomVisual(p.roomName).rect(p.x - 0.5, p.y - 0.5, 1, 1, { stroke: 'cyan', fill: 'transparent', opacity: 0.3 })
     );
     super.visualize();
   }

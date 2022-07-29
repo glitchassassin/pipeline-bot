@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-export function runStates(states: Record<States, (creep: Creep) => States>, creep: Creep) {
+export function runStates(states: Partial<Record<States, (creep: Creep) => States>>, creep: Creep) {
   const statesRun: States[] = [];
   creep.memory.state ??= Object.keys(states)[0] as States; // First state is default
   while (!statesRun.includes(creep.memory.state)) {
@@ -20,7 +20,7 @@ export function runStates(states: Record<States, (creep: Creep) => States>, cree
       delete creep.memory.state;
       return;
     }
-    creep.memory.state = states[creep.memory.state](creep);
+    creep.memory.state = states[creep.memory.state]!(creep);
   }
   // console.log(creep.name, JSON.stringify(statesRun));
 }
