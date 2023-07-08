@@ -1,3 +1,4 @@
+import 'prototypes';
 import 'ts-polyfill/lib/es2019-array';
 
 export const loop = () => {
